@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookings — The Quiet Mind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     EDIT ZONE — keep these two values identical to the CONFIG
+     object in index.html, or this page won't talk to the same
+     booking sheet / passcode.
+     ============================================================ */
+  /* (see CONFIG object near the top of the <script> below) */
+
+  :root{
+    --cream:        #EFE9DA;
+    --cream-soft:   #FAF7EF;
+    --forest:       #1B2419;
+    --forest-deep:  #2E4028;
+    --forest-70:    rgba(27,36,25,.68);
+    --forest-45:    rgba(27,36,25,.45);
+    --sage:         #6B7D57;
+    --sage-light:   #C3CDAE;
+    --brass:        #A6813F;
+    --brass-light:  #D9BD82;
+    --line:         rgba(27,36,25,.13);
+    --line-brass:   rgba(166,129,63,.35);
+    --deep-sage:    #47603D;
+    --clay-red:     #A6543F;
+    --clay-red-soft: rgba(166,84,63,.14);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{
+    background:var(--cream);
+    color:var(--forest);
+    font-family:'Manrope', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  h1,h2,h3{
+    font-family:'Bodoni Moda', serif;
+    font-weight:450;
+    letter-spacing:-0.01em;
+    line-height:1.1;
+  }
+
+  button{font-family:inherit; cursor:pointer;}
+  input{font-family:inherit;}
+
+  /* -------------------- gate screen -------------------- */
+  .gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .gate-card{
+    width:100%;
+    max-width:380px;
+    background:var(--cream-soft);
+    border:1px solid var(--line-brass);
+    border-radius:22px;
+    padding:44px 36px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 30px 60px -30px rgba(27,36,25,.3);
+  }
+  .gate-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, transparent, var(--brass-light) 22%, var(--brass) 50%, var(--brass-light) 78%, transparent);
+  }
+  .gate-mark{
+    font-family:'Bodoni Moda', serif;
+    font-size:1.15rem;
+    margin-bottom:6px;
+  }
+  .gate-mark em{color:var(--brass); font-style:italic;}
+  .gate-sub{
+    font-size:.86rem;
+    color:var(--forest-70);
+    margin-bottom:28px;
+  }
+  .gate-input{
+    width:100%;
+    padding:14px 16px;
+    border-radius:12px;
+    border:1px solid var(--line-brass);
+    background:var(--cream);
+    color:var(--forest);
+    font-size:.98rem;
+    text-align:center;
+    letter-spacing:.04em;
+    margin-bottom:14px;
+    outline:none;
+  }
+  .gate-input:focus{border-color:var(--brass);}
+  .gate-btn{
+    width:100%;
+    padding:14px 16px;
+    border-radius:100px;
+    border:none;
+    background:var(--forest);
+    color:var(--cream-soft);
+    font-size:.9rem;
+    letter-spacing:.03em;
+    font-weight:600;
+    transition:background .2s ease;
+  }
+  .gate-btn:hover{background:var(--forest-deep);}
+  .gate-error{
+    margin-top:14px;
+    font-size:.82rem;
+    color:var(--clay-red);
+    display:none;
+  }
+  .gate-error.show{display:block;}
+
+  /* -------------------- app shell -------------------- */
+  .app{display:none; min-height:100vh; flex-direction:column;}
+  .app.show{display:flex;}
+
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+    padding:18px 28px;
+    background:var(--cream-soft);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-brand{
+    display:flex; align-items:center; gap:10px;
+  }
+  .topbar-brand h1{font-size:1.15rem;}
+  .topbar-brand h1 em{color:var(--brass); font-style:italic;}
+  .topbar-brand span{
+    font-size:.72rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--forest-70);
+    border-left:1px solid var(--line-brass);
+    padding-left:10px;
+    margin-left:2px;
+  }
+  .topbar-actions{display:flex; align-items:center; gap:10px;}
+  .icon-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:9px 16px;
+    border-radius:100px;
+    border:1px solid var(--line-brass);
+    background:transparent;
+    color:var(--forest);
+    font-size:.82rem;
+    font-weight:600;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .icon-btn:hover{background:var(--cream);}
+  .icon-btn svg{width:15px; height:15px;}
+  .icon-btn.subtle{border-color:transparent; color:var(--forest-70);}
+
+  .main{
+    flex:1;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 380px;
+    gap:0;
+    max-width:1320px;
+    width:100%;
+    margin:0 auto;
+    align-items:start;
+  }
+
+  /* -------------------- calendar -------------------- */
+  .cal-panel{padding:28px 28px 60px;}
+
+  .cal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .cal-title{font-size:1.5rem;}
+  .cal-nav{display:flex; align-items:center; gap:6px;}
+  .cal-nav-btn{
+    width:36px; height:36px;
+    border-radius:50%;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--forest);
+    transition:background .2s ease;
+  }
+  .cal-nav-btn:hover{background:var(--cream);}
+  .cal-nav-btn svg{width:16px; height:16px;}
+  .cal-today-btn{
+    margin-left:8px;
+    padding:8px 14px;
+    border-radius:100px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    font-size:.78rem;
+    font-weight:600;
+    color:var(--forest);
+  }
+  .cal-today-btn:hover{background:var(--cream);}
+
+  .cal-legend{
+    display:flex; gap:16px; flex-wrap:wrap;
+    margin-bottom:18px;
+    font-size:.78rem;
+    color:var(--forest-70);
+  }
+  .cal-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .dot.pending{background:var(--brass);}
+  .dot.confirmed{background:var(--deep-sage);}
+  .dot.cancelled{background:var(--clay-red);}
+
+  .cal-grid{
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    background:var(--cream-soft);
+  }
+  .cal-dow-row{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    background:var(--cream);
+    border-bottom:1px solid var(--line);
+  }
+  .cal-dow{
+    padding:10px 0;
+    text-align:center;
+    font-size:.7rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--forest-70);
+    font-weight:600;
+  }
+  .cal-weeks{display:grid;}
+  .cal-week-row{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+  }
+  .cal-cell{
+    min-height:92px;
+    padding:8px 8px 10px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    position:relative;
+    cursor:pointer;
+    transition:background .15s ease;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .cal-week-row .cal-cell:last-child{border-right:none;}
+  .cal-cell:hover{background:var(--cream);}
+  .cal-cell.outside{color:var(--forest-45); background:rgba(239,233,218,.4);}
+  .cal-cell.outside:hover{background:rgba(239,233,218,.6);}
+  .cal-cell.today .cal-daynum{
+    background:var(--forest);
+    color:var(--cream-soft);
+  }
+  .cal-cell.selected{
+    background:var(--sage-light);
+    box-shadow:inset 0 0 0 2px var(--brass);
+  }
+  .cal-daynum{
+    width:24px; height:24px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.8rem;
+    font-weight:600;
+  }
+  .cal-dots{display:flex; gap:4px; flex-wrap:wrap;}
+  .cal-count{
+    margin-top:auto;
+    font-size:.68rem;
+    color:var(--forest-70);
+    letter-spacing:.02em;
+  }
+
+  /* -------------------- day panel -------------------- */
+  .day-panel{
+    position:sticky;
+    top:73px;
+    height:calc(100vh - 73px);
+    overflow-y:auto;
+    border-left:1px solid var(--line);
+    background:var(--cream-soft);
+    padding:26px 24px 60px;
+  }
+  .day-panel-head{margin-bottom:6px;}
+  .day-panel-date{font-size:1.25rem;}
+  .day-panel-sub{
+    font-size:.8rem;
+    color:var(--forest-70);
+    margin-bottom:22px;
+  }
+  .day-empty{
+    text-align:center;
+    padding:60px 12px;
+    color:var(--forest-70);
+    font-size:.9rem;
+    line-height:1.6;
+  }
+  .day-empty svg{width:34px; height:34px; margin-bottom:14px; color:var(--brass);}
+
+  .booking-card{
+    border:1px solid var(--line-brass);
+    border-radius:14px;
+    background:var(--cream);
+    padding:16px 16px 14px;
+    margin-bottom:12px;
+  }
+  .booking-top{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .booking-name{font-size:.98rem; font-weight:700;}
+  .booking-service{font-size:.8rem; color:var(--forest-70); margin-top:1px;}
+  .status-pill{
+    font-size:.68rem;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:100px;
+    white-space:nowrap;
+  }
+  .status-pill.pending{background:rgba(166,129,63,.16); color:var(--brass);}
+  .status-pill.confirmed{background:rgba(71,96,61,.16); color:var(--deep-sage);}
+  .status-pill.cancelled{background:var(--clay-red-soft); color:var(--clay-red);}
+
+  .booking-meta{
+    font-size:.82rem;
+    color:var(--forest-70);
+    line-height:1.65;
+    margin-bottom:12px;
+  }
+  .booking-meta b{color:var(--forest); font-weight:600;}
+
+  .booking-actions{display:flex; gap:8px;}
+  .b-btn{
+    flex:1;
+    padding:9px 10px;
+    border-radius:9px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    font-size:.78rem;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--forest);
+    transition:background .15s ease, opacity .15s ease;
+  }
+  .b-btn:hover{background:var(--cream);}
+  .b-btn.confirm{border-color:var(--deep-sage); color:var(--deep-sage);}
+  .b-btn.cancel{border-color:var(--clay-red); color:var(--clay-red);}
+  .b-btn:disabled{opacity:.45; cursor:default;}
+
+  /* -------------------- upcoming rail (below calendar on mobile / summary) -------------------- */
+  .summary-strip{
+    display:flex; gap:10px; flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .summary-chip{
+    padding:10px 16px;
+    border-radius:14px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    font-size:.78rem;
+    color:var(--forest-70);
+    display:flex; align-items:center; gap:8px;
+  }
+  .summary-chip b{
+    font-family:'Bodoni Moda', serif;
+    font-size:1.05rem;
+    color:var(--forest);
+  }
+
+  .loading-line{
+    text-align:center;
+    padding:40px;
+    color:var(--forest-70);
+    font-size:.88rem;
+  }
+
+  /* -------------------- responsive -------------------- */
+  @media (max-width: 980px){
+    .main{grid-template-columns:1fr;}
+    .day-panel{
+      position:static;
+      height:auto;
+      border-left:none;
+      border-top:1px solid var(--line);
+    }
+  }
+  @media (max-width: 560px){
+    .cal-panel{padding:20px 14px 40px;}
+    .cal-cell{min-height:64px; padding:6px 4px 8px;}
+    .cal-daynum{width:20px; height:20px; font-size:.72rem;}
+    .topbar{padding:14px 16px;}
+    .topbar-brand span{display:none;}
+  }
+
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-mark">The Quiet <em>Mind</em></div>
+    <div class="gate-sub">Practice bookings — enter your passcode to continue.</div>
+    <input type="password" class="gate-input" id="gateInput" placeholder="Passcode" autocomplete="off">
+    <button class="gate-btn" id="gateBtn">Unlock</button>
+    <div class="gate-error" id="gateError">Incorrect passcode — try again.</div>
+  </div>
+</div>
+
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      <h1>The Quiet <em>Mind</em></h1>
+      <span>Bookings</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn subtle" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Refresh
+      </button>
+      <button class="icon-btn" id="lockBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Lock
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="cal-panel">
+
+      <div class="summary-strip" id="summaryStrip"></div>
+
+      <div class="cal-head">
+        <h2 class="cal-title" id="calTitle">—</h2>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" id="prevMonth" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="cal-nav-btn" id="nextMonth" aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="cal-today-btn" id="todayBtn">Today</button>
+        </div>
+      </div>
+
+      <div class="cal-legend">
+        <span><i class="dot pending"></i> Pending</span>
+        <span><i class="dot confirmed"></i> Confirmed</span>
+        <span><i class="dot cancelled"></i> Cancelled</span>
+      </div>
+
+      <div id="calWrap">
+        <div class="loading-line">Loading bookings…</div>
+      </div>
+
+    </div>
+
+    <div class="day-panel" id="dayPanel">
+      <div class="day-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+        Select a day on the calendar to see its bookings.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — keep these two values identical to the CONFIG object
+   in index.html. If you change the passcode or the Sheet URL
+   there, update it here too.
+   ============================================================ */
+const CONFIG = {
+  adminPasscode: "quietmind2026",
+  googleSheetUrl: "https://script.google.com/macros/s/AKfycbwLcN4j72zKQKbwIxG1OsPaAOdkfjxuuASSMHlGc4U76ELNgDgzMsZ1XkUYveDflpy_tw/exec"
+};
+
+/* ------------------------------------------------------------
+   Passcode gate
+   ------------------------------------------------------------ */
+const gate = document.getElementById('gate');
+const app = document.getElementById('app');
+const gateInput = document.getElementById('gateInput');
+const gateError = document.getElementById('gateError');
+
+function unlock(){
+  gate.style.display = 'none';
+  app.classList.add('show');
+  init();
+}
+
+document.getElementById('gateBtn').addEventListener('click', tryUnlock);
+gateInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+function tryUnlock(){
+  if (gateInput.value === CONFIG.adminPasscode){
+    unlock();
+  } else {
+    gateError.classList.add('show');
+    gateInput.value = '';
+    gateInput.focus();
+  }
+}
+
+document.getElementById('lockBtn').addEventListener('click', () => {
+  app.classList.remove('show');
+  gate.style.display = 'flex';
+  gateInput.value = '';
+  gateError.classList.remove('show');
+  gateInput.focus();
+});
+
+/* ------------------------------------------------------------
+   Data layer — same contract as index.html's admin panel:
+   GET the sheet for the full list, POST { action: 'updateStatus' }
+   to change a booking's status.
+   ------------------------------------------------------------ */
+let bookings = [];               // flat list from the sheet
+let byDate = {};                 // date (yyyy-MM-dd) -> [bookings]
+let viewYear, viewMonth;         // 0-indexed month, calendar currently showing
+let selectedDate = null;         // yyyy-MM-dd currently open in the day panel
+
+async function loadBookings(){
+  if (!CONFIG.googleSheetUrl) return [];
+  try {
+    const res = await fetch(CONFIG.googleSheetUrl, { method: 'GET' });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    return [];
+  }
+}
+
+async function setBookingStatus(ref, status){
+  if (!CONFIG.googleSheetUrl) return null;
+  try {
+    const res = await fetch(CONFIG.googleSheetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoids a CORS preflight Apps Script can't handle
+      body: JSON.stringify({ action: 'updateStatus', ref, status })
+    });
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function todayISO(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function niceDate(iso){
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+
+/* ------------------------------------------------------------
+   Init / refresh
+   ------------------------------------------------------------ */
+async function init(){
+  const now = new Date();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  await refreshData();
+  selectDate(todayISO());
+}
+
+async function refreshData(){
+  document.getElementById('calWrap').innerHTML = '<div class="loading-line">Loading bookings…</div>';
+  bookings = await loadBookings();
+  byDate = {};
+  bookings.forEach(b => {
+    if (!b.date) return;
+    (byDate[b.date] = byDate[b.date] || []).push(b);
+  });
+  renderSummary();
+  renderCalendar();
+  if (selectedDate) renderDayPanel(selectedDate);
+}
+
+document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
+/* ------------------------------------------------------------
+   Summary strip
+   ------------------------------------------------------------ */
+function renderSummary(){
+  const today = todayISO();
+  const pending = bookings.filter(b => b.status === 'pending').length;
+  const confirmedToday = (byDate[today] || []).filter(b => b.status !== 'cancelled').length;
+
+  // Count bookings in the next 7 days (excluding cancelled).
+  const now = new Date();
+  let upcoming7 = 0;
+  for (let i = 0; i < 7; i++){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    upcoming7 += (byDate[key] || []).filter(b => b.status !== 'cancelled').length;
+  }
+
+  const strip = document.getElementById('summaryStrip');
+  strip.innerHTML = `
+    <div class="summary-chip"><b>${pending}</b>&nbsp;awaiting confirmation</div>
+    <div class="summary-chip"><b>${confirmedToday}</b>&nbsp;today</div>
+    <div class="summary-chip"><b>${upcoming7}</b>&nbsp;in the next 7 days</div>
+  `;
+}
+
+/* ------------------------------------------------------------
+   Calendar rendering
+   ------------------------------------------------------------ */
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function renderCalendar(){
+  document.getElementById('calTitle').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const startWeekday = firstOfMonth.getDay(); // 0 = Sun
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+
+  // Build a flat list of 42 cells (6 weeks) so the grid height stays stable.
+  const cells = [];
+  for (let i = 0; i < startWeekday; i++){
+    cells.push({ day: daysInPrevMonth - startWeekday + 1 + i, outside: true, monthOffset: -1 });
+  }
+  for (let d = 1; d <= daysInMonth; d++){
+    cells.push({ day: d, outside: false, monthOffset: 0 });
+  }
+  while (cells.length % 7 !== 0 || cells.length < 42){
+    const nextDay = cells.length - (startWeekday + daysInMonth) + 1;
+    cells.push({ day: nextDay, outside: true, monthOffset: 1 });
+    if (cells.length >= 42) break;
+  }
+
+  const today = todayISO();
+  let html = '<div class="cal-grid"><div class="cal-dow-row">';
+  DOW.forEach(d => html += `<div class="cal-dow">${d}</div>`);
+  html += '</div><div class="cal-weeks">';
+
+  for (let w = 0; w < cells.length / 7; w++){
+    html += '<div class="cal-week-row">';
+    for (let c = 0; c < 7; c++){
+      const cell = cells[w*7 + c];
+      let y = viewYear, m = viewMonth;
+      if (cell.monthOffset === -1){ m -= 1; if (m < 0){ m = 11; y -= 1; } }
+      if (cell.monthOffset === 1){ m += 1; if (m > 11){ m = 0; y += 1; } }
+      const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(cell.day).padStart(2,'0')}`;
+      const dayBookings = byDate[iso] || [];
+      const isToday = iso === today;
+      const isSelected = iso === selectedDate;
+
+      const statuses = new Set(dayBookings.map(b => b.status));
+      let dots = '';
+      ['pending','confirmed','cancelled'].forEach(s => {
+        if (statuses.has(s)) dots += `<span class="dot ${s}"></span>`;
+      });
+
+      html += `
+        <div class="cal-cell${cell.outside ? ' outside' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${iso}">
+          <span class="cal-daynum">${cell.day}</span>
+          <div class="cal-dots">${dots}</div>
+          ${dayBookings.length ? `<div class="cal-count">${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}</div>` : ''}
+        </div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('calWrap').innerHTML = html;
+
+  document.querySelectorAll('.cal-cell').forEach(cell => {
+    cell.addEventListener('click', () => selectDate(cell.dataset.date));
+  });
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  viewMonth -= 1;
+  if (viewMonth < 0){ viewMonth = 11; viewYear -= 1; }
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  viewMonth += 1;
+  if (viewMonth > 11){ viewMonth = 0; viewYear += 1; }
+  renderCalendar();
+});
+document.getElementById('todayBtn').addEventListener('click', () => {
+  const now = new Date();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  renderCalendar();
+  selectDate(todayISO());
+});
+
+/* ------------------------------------------------------------
+   Day panel — list + confirm/cancel actions for the selected day
+   ------------------------------------------------------------ */
+function selectDate(iso){
+  selectedDate = iso;
+  // Jump the visible month if the selected date lives outside it.
+  const [y, m] = iso.split('-').map(Number);
+  if (y !== viewYear || (m - 1) !== viewMonth){
+    viewYear = y; viewMonth = m - 1;
+  }
+  renderCalendar();
+  renderDayPanel(iso);
+}
+
+function renderDayPanel(iso){
+  const panel = document.getElementById('dayPanel');
+  const dayBookings = (byDate[iso] || []).slice().sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+
+  let html = `
+    <div class="day-panel-head">
+      <h3 class="day-panel-date">${niceDate(iso)}</h3>
+    </div>
+    <div class="day-panel-sub">${dayBookings.length ? `${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}` : 'No bookings'}</div>
+  `;
+
+  if (dayBookings.length === 0){
+    html += `
+      <div class="day-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+        Nothing booked on this day yet.
+      </div>`;
+  } else {
+    dayBookings.forEach(b => {
+      html += `
+        <div class="booking-card" data-ref="${b.ref}">
+          <div class="booking-top">
+            <div>
+              <div class="booking-name">${escapeHtml(b.name || 'Unnamed')}</div>
+              <div class="booking-service">${escapeHtml(b.service || '')}</div>
+            </div>
+            <span class="status-pill ${b.status}">${b.status}</span>
+          </div>
+          <div class="booking-meta">
+            <b>${escapeHtml(b.time || '')}</b><br>
+            ${b.phone ? escapeHtml(b.phone) + '<br>' : ''}
+            ${b.email ? escapeHtml(b.email) + '<br>' : ''}
+            Ref ${escapeHtml(b.ref || '—')}
+          </div>
+          <div class="booking-actions">
+            <button class="b-btn confirm" data-action="confirmed" ${b.status === 'confirmed' ? 'disabled' : ''}>Confirm</button>
+            <button class="b-btn cancel" data-action="cancelled" ${b.status === 'cancelled' ? 'disabled' : ''}>Cancel</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  panel.innerHTML = html;
+
+  panel.querySelectorAll('.booking-card').forEach(card => {
+    const ref = card.dataset.ref;
+    card.querySelectorAll('.b-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const status = btn.dataset.action;
+        card.querySelectorAll('.b-btn').forEach(b => b.disabled = true);
+        const result = await setBookingStatus(ref, status);
+        if (!result || result.success === false){
+          alert('Could not update that booking — check your connection and try again.');
+          card.querySelectorAll('.b-btn').forEach(b => b.disabled = false);
+          return;
+        }
+        await refreshData();
+      });
+    });
+  });
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+
+</body>
+</html>
