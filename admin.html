@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookings — The Quiet Mind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     EDIT ZONE — keep these two values identical to the CONFIG
+     object in index.html, or this page won't talk to the same
+     booking sheet / passcode.
+     ============================================================ */
+  /* (see CONFIG object near the top of the <script> below) */
+
+  :root{
+    --cream:        #EFE9DA;
+    --cream-soft:   #FAF7EF;
+    --forest:       #1B2419;
+    --forest-deep:  #2E4028;
+    --forest-70:    rgba(27,36,25,.68);
+    --forest-45:    rgba(27,36,25,.45);
+    --sage:         #6B7D57;
+    --sage-light:   #C3CDAE;
+    --brass:        #A6813F;
+    --brass-light:  #D9BD82;
+    --line:         rgba(27,36,25,.13);
+    --line-brass:   rgba(166,129,63,.35);
+    --deep-sage:    #47603D;
+    --clay-red:     #A6543F;
+    --clay-red-soft: rgba(166,84,63,.14);
+    --shadow-sm:    0 8px 20px -12px rgba(27,36,25,.25);
+    --shadow-md:    0 20px 44px -22px rgba(27,36,25,.32);
+    --shadow-lg:    0 34px 70px -30px rgba(27,36,25,.38);
+    --ease:         cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:
+      radial-gradient(1100px 620px at 12% -8%, rgba(217,189,130,.16), transparent 60%),
+      radial-gradient(900px 700px at 108% 12%, rgba(195,205,174,.28), transparent 55%),
+      var(--cream);
+    color:var(--forest);
+    font-family:'Manrope', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    min-height:100vh;
+  }
+
+  h1,h2,h3{
+    font-family:'Bodoni Moda', serif;
+    font-weight:450;
+    letter-spacing:-0.01em;
+    line-height:1.1;
+  }
+
+  button{font-family:inherit; cursor:pointer;}
+  input{font-family:inherit;}
+
+  ::selection{background:var(--brass-light); color:var(--forest);}
+
+  /* thin, elegant scrollbars where supported */
+  .day-panel, .main{scrollbar-width:thin; scrollbar-color:var(--brass-light) transparent;}
+  .day-panel::-webkit-scrollbar{width:8px;}
+  .day-panel::-webkit-scrollbar-track{background:transparent;}
+  .day-panel::-webkit-scrollbar-thumb{background:var(--brass-light); border-radius:100px;}
+  .day-panel::-webkit-scrollbar-thumb:hover{background:var(--brass);}
+
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @keyframes popIn{
+    from{opacity:0; transform:scale(.97) translateY(6px);}
+    to{opacity:1; transform:scale(1) translateY(0);}
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* -------------------- gate screen -------------------- */
+  .gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .gate-card{
+    width:100%;
+    max-width:390px;
+    background:var(--cream-soft);
+    border:1px solid var(--line-brass);
+    border-radius:26px;
+    padding:48px 40px 40px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--shadow-lg);
+    animation:popIn .55s var(--ease) both;
+  }
+  .gate-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, transparent, var(--brass-light) 22%, var(--brass) 50%, var(--brass-light) 78%, transparent);
+  }
+  .gate-badge{
+    width:52px; height:52px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(155deg, var(--sage-light) 0%, var(--cream) 70%);
+    border:1px solid var(--line-brass);
+    color:var(--deep-sage);
+    box-shadow:0 10px 22px -14px rgba(27,36,25,.35), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .gate-badge svg{width:22px; height:22px;}
+  .gate-mark{
+    font-family:'Bodoni Moda', serif;
+    font-size:1.28rem;
+    margin-bottom:8px;
+  }
+  .gate-mark em{color:var(--brass); font-style:italic;}
+  .gate-sub{
+    font-size:.86rem;
+    color:var(--forest-70);
+    margin-bottom:30px;
+    line-height:1.55;
+  }
+  .gate-input-wrap{
+    position:relative;
+    margin-bottom:16px;
+  }
+  .gate-input{
+    width:100%;
+    padding:15px 46px 15px 18px;
+    border-radius:12px;
+    border:1px solid var(--line-brass);
+    background:var(--cream);
+    color:var(--forest);
+    font-size:1rem;
+    text-align:left;
+    letter-spacing:.14em;
+    outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .gate-input::placeholder{letter-spacing:.02em; color:var(--forest-45);}
+  .gate-input:focus{
+    border-color:var(--brass);
+    box-shadow:0 0 0 4px rgba(166,129,63,.14);
+  }
+  .gate-input:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+  .gate-toggle:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+  .gate-input.invalid{
+    border-color:var(--clay-red);
+  }
+  .gate-input.invalid:focus{
+    box-shadow:0 0 0 4px rgba(166,84,63,.14);
+  }
+  .gate-toggle{
+    position:absolute;
+    right:6px; top:50%;
+    transform:translateY(-50%);
+    width:34px; height:34px;
+    border-radius:50%;
+    border:none;
+    background:transparent;
+    color:var(--forest-70);
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s ease, color .2s ease;
+  }
+  .gate-toggle:hover{background:var(--line-brass); color:var(--forest);}
+  .gate-toggle svg{width:17px; height:17px;}
+  .gate-btn{
+    width:100%;
+    padding:15px 16px;
+    border-radius:100px;
+    border:none;
+    background:linear-gradient(155deg, #566E49, var(--deep-sage) 60%, #3A4E32);
+    color:var(--cream-soft);
+    font-size:.88rem;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    font-weight:600;
+    box-shadow:0 14px 26px -14px rgba(58,78,50,.55), inset 0 1px 0 rgba(255,255,255,.14);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), opacity .2s ease;
+    display:flex; align-items:center; justify-content:center; gap:9px;
+  }
+  .gate-btn:hover:not(:disabled){transform:translateY(-1px); box-shadow:0 18px 32px -14px rgba(58,78,50,.6), inset 0 1px 0 rgba(255,255,255,.14);}
+  .gate-btn:active:not(:disabled){transform:translateY(0);}
+  .gate-btn:disabled{opacity:.7; cursor:default;}
+  .gate-btn .gate-btn-spinner{
+    width:14px; height:14px;
+    border-radius:50%;
+    border:2px solid rgba(250,247,239,.4);
+    border-top-color:var(--cream-soft);
+    animation:spin .6s linear infinite;
+    display:none;
+  }
+  .gate-btn.checking .gate-btn-spinner{display:inline-block;}
+  .gate-btn.checking .gate-btn-label{opacity:.85;}
+  .gate-error{
+    margin-top:16px;
+    font-size:.82rem;
+    color:var(--clay-red);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    animation:fadeUp .25s var(--ease) both;
+  }
+  .gate-error svg{width:14px; height:14px; flex-shrink:0;}
+  .gate-error.show{display:flex;}
+  @keyframes shake{
+    10%, 90% { transform:translateX(-1px); }
+    20%, 80% { transform:translateX(2px); }
+    30%, 50%, 70% { transform:translateX(-5px); }
+    40%, 60% { transform:translateX(5px); }
+  }
+  .gate-card.shake{animation:shake .5s var(--ease);}
+
+  /* -------------------- app shell -------------------- */
+  .app{display:none; min-height:100vh; flex-direction:column;}
+  .app.show{display:flex;}
+
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+    padding:17px 28px;
+    background:rgba(250,247,239,.86);
+    -webkit-backdrop-filter:blur(14px) saturate(140%);
+    backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--line);
+    box-shadow:0 1px 0 rgba(255,255,255,.6);
+  }
+  .topbar::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:-1px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--line-brass) 30%, var(--line-brass) 70%, transparent);
+  }
+  .topbar-brand{
+    display:flex; align-items:center; gap:11px;
+  }
+  .topbar-brand h1{font-size:1.18rem;}
+  .topbar-brand h1 em{color:var(--brass); font-style:italic;}
+  .topbar-brand span{
+    font-size:.7rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--forest-70);
+    border-left:1px solid var(--line-brass);
+    padding-left:11px;
+    margin-left:1px;
+  }
+  .topbar-clock{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 14px;
+    border-radius:100px;
+    border:1px solid var(--line-brass);
+    background:var(--cream);
+    color:var(--forest-70);
+    font-size:.82rem;
+  }
+  .topbar-clock svg{width:14px; height:14px; flex-shrink:0; color:var(--brass);}
+  .topbar-clock #clockTime{
+    font-family:'Bodoni Moda', serif;
+    font-weight:600;
+    color:var(--forest);
+    font-variant-numeric:tabular-nums;
+  }
+  .topbar-clock-tag{
+    font-size:.66rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--forest-70);
+    border-left:1px solid var(--line-brass);
+    padding-left:8px;
+  }
+  .topbar-actions{display:flex; align-items:center; gap:8px;}
+  .search-bar{
+    position:sticky;
+    top:73px;
+    z-index:19;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 28px;
+    background:var(--cream);
+    border-bottom:1px solid var(--line);
+    color:var(--forest-45);
+  }
+  .search-bar:focus-within{color:var(--forest-70);}
+  .search-bar svg{width:17px; height:17px; flex-shrink:0;}
+  .search-bar input{
+    border:none; outline:none; background:transparent;
+    font-size:.92rem; color:var(--forest); width:100%;
+    max-width:520px;
+  }
+  .search-bar input::placeholder{color:var(--forest-45);}
+  .search-results{
+    position:absolute;
+    top:calc(100% + 4px); left:28px; right:28px;
+    max-width:520px;
+    max-height:360px;
+    overflow-y:auto;
+    background:var(--cream-soft);
+    border:1px solid var(--line-brass);
+    border-radius:14px;
+    box-shadow:var(--shadow-lg);
+    display:none;
+    z-index:30;
+  }
+  .search-results.open{display:block;}
+  .search-result-item{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    padding:11px 15px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    transition:background .15s ease;
+  }
+  .search-result-item:last-child{border-bottom:none;}
+  .search-result-item:hover{background:var(--cream);}
+  .search-result-name{font-size:.86rem; font-weight:700; color:var(--forest);}
+  .search-result-meta{font-size:.74rem; color:var(--forest-70);}
+  .search-result-empty{padding:16px; text-align:center; font-size:.82rem; color:var(--forest-70);}
+  .icon-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:9px 17px;
+    border-radius:100px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    color:var(--forest);
+    font-size:.8rem;
+    font-weight:600;
+    letter-spacing:.01em;
+    transition:background .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .icon-btn:hover{background:var(--cream); transform:translateY(-1px); box-shadow:var(--shadow-sm);}
+  .icon-btn:active{transform:translateY(0);}
+  .icon-btn svg{width:14px; height:14px; transition:transform .4s var(--ease);}
+  .icon-btn.subtle{border-color:transparent; background:transparent; color:var(--forest-70); box-shadow:none;}
+  .icon-btn.subtle:hover{background:var(--cream); box-shadow:none;}
+  .icon-btn.spinning svg{animation:spin .7s linear infinite;}
+
+  .main{
+    flex:1;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 380px;
+    gap:0;
+    max-width:1320px;
+    width:100%;
+    margin:0 auto;
+    align-items:start;
+  }
+
+  /* -------------------- calendar -------------------- */
+  .cal-panel{padding:30px 32px 60px;}
+
+  .cal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .cal-title{font-size:1.6rem; transition:opacity .2s ease;}
+  .cal-nav{display:flex; align-items:center; gap:7px;}
+  .view-toggle{
+    display:flex;
+    padding:3px;
+    border-radius:100px;
+    background:var(--cream);
+    border:1px solid var(--line-brass);
+    margin-right:6px;
+  }
+  .view-toggle-btn{
+    padding:7px 14px;
+    border-radius:100px;
+    border:none;
+    background:transparent;
+    color:var(--forest-70);
+    font-size:.76rem;
+    font-weight:700;
+    letter-spacing:.02em;
+    transition:background .2s ease, color .2s ease;
+  }
+  .view-toggle-btn.active{background:var(--forest); color:var(--cream-soft);}
+  .cal-nav-btn{
+    width:38px; height:38px;
+    border-radius:50%;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--forest);
+    transition:background .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .cal-nav-btn:hover{background:var(--cream); transform:translateY(-1px); box-shadow:var(--shadow-sm);}
+  .cal-nav-btn:active{transform:translateY(0);}
+  .cal-nav-btn svg{width:16px; height:16px;}
+  .cal-today-btn{
+    margin-left:8px;
+    padding:9px 16px;
+    border-radius:100px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    font-size:.78rem;
+    font-weight:600;
+    color:var(--forest);
+    transition:background .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .cal-today-btn:hover{background:var(--cream); transform:translateY(-1px); box-shadow:var(--shadow-sm);}
+
+  .cal-legend{
+    display:flex; gap:18px; flex-wrap:wrap;
+    margin-bottom:20px;
+    font-size:.78rem;
+    color:var(--forest-70);
+  }
+  .cal-legend span{display:inline-flex; align-items:center; gap:7px;}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block; box-shadow:0 0 0 3px rgba(0,0,0,0);}
+  .dot.pending{background:var(--brass); box-shadow:0 0 0 3px rgba(166,129,63,.14);}
+  .dot.confirmed{background:var(--deep-sage); box-shadow:0 0 0 3px rgba(71,96,61,.14);}
+  .dot.cancelled{background:var(--clay-red); box-shadow:0 0 0 3px rgba(166,84,63,.14);}
+
+  .cal-grid{
+    border:1px solid var(--line-brass);
+    border-radius:20px;
+    overflow:hidden;
+    background:var(--cream-soft);
+    box-shadow:var(--shadow-md);
+    animation:fadeUp .35s var(--ease) both;
+  }
+  .cal-dow-row{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    background:linear-gradient(180deg, var(--cream), rgba(239,233,218,.6));
+    border-bottom:1px solid var(--line);
+  }
+  .cal-dow{
+    padding:12px 0;
+    text-align:center;
+    font-size:.68rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--forest-70);
+    font-weight:700;
+  }
+  .cal-weeks{display:grid;}
+  .cal-week-row{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+  }
+  .cal-cell{
+    min-height:94px;
+    padding:9px 9px 11px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    position:relative;
+    cursor:pointer;
+    transition:background .2s var(--ease);
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+  .cal-week-row .cal-cell:last-child{border-right:none;}
+  .cal-week-row:last-child .cal-cell{border-bottom:none;}
+  .cal-cell:hover{background:rgba(166,129,63,.06);}
+  .cal-cell:not(.today):hover .cal-daynum{box-shadow:0 0 0 1px var(--line-brass) inset;}
+  .cal-cell.outside{color:var(--forest-45); background:rgba(239,233,218,.4);}
+  .cal-cell.outside:hover{background:rgba(239,233,218,.65);}
+  .cal-cell.today .cal-daynum{
+    background:linear-gradient(155deg, #566E49, var(--deep-sage) 70%);
+    color:var(--cream-soft);
+    box-shadow:0 4px 10px -4px rgba(71,96,61,.6);
+  }
+  .cal-cell.selected{
+    background:var(--sage-light);
+    box-shadow:inset 0 0 0 2px var(--brass);
+  }
+  .cal-cell.selected::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, transparent, var(--brass) 50%, transparent);
+  }
+  .cal-daynum{
+    width:25px; height:25px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.8rem;
+    font-weight:600;
+    transition:box-shadow .2s ease;
+  }
+  .cal-dots{display:flex; gap:4px; flex-wrap:wrap;}
+  .cal-count{
+    margin-top:auto;
+    font-size:.66rem;
+    color:var(--forest-70);
+    letter-spacing:.01em;
+    font-weight:600;
+  }
+
+  /* -------------------- day panel -------------------- */
+  .day-panel{
+    position:sticky;
+    top:121px;
+    height:calc(100vh - 121px);
+    overflow-y:auto;
+    border-left:1px solid var(--line);
+    background:linear-gradient(180deg, var(--cream-soft), rgba(250,247,239,.7));
+    padding:28px 24px 60px;
+  }
+  .day-panel-head{margin-bottom:6px;}
+  .day-panel-date{font-size:1.3rem;}
+  .day-panel-sub{
+    font-size:.8rem;
+    color:var(--forest-70);
+    margin-bottom:24px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line-brass);
+  }
+  .day-empty{
+    text-align:center;
+    padding:64px 14px;
+    color:var(--forest-70);
+    font-size:.9rem;
+    line-height:1.6;
+    animation:fadeUp .3s var(--ease) both;
+  }
+  .day-empty svg{width:36px; height:36px; margin-bottom:16px; color:var(--brass); opacity:.8;}
+
+  .booking-card{
+    border:1px solid var(--line-brass);
+    border-radius:16px;
+    background:var(--cream);
+    padding:17px 17px 15px;
+    margin-bottom:13px;
+    box-shadow:var(--shadow-sm);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+    animation:fadeUp .35s var(--ease) both;
+  }
+  .booking-card:hover{transform:translateY(-2px); box-shadow:var(--shadow-md);}
+  .booking-top{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .booking-name{font-size:1rem; font-weight:700; font-family:'Bodoni Moda', serif;}
+  .booking-service{font-size:.8rem; color:var(--forest-70); margin-top:2px;}
+  .status-pill{
+    font-size:.66rem;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:5px 11px;
+    border-radius:100px;
+    white-space:nowrap;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .status-pill::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0;}
+  .status-pill.pending{background:rgba(166,129,63,.16); color:var(--brass);}
+  .status-pill.confirmed{background:rgba(71,96,61,.16); color:var(--deep-sage);}
+  .status-pill.cancelled{background:var(--clay-red-soft); color:var(--clay-red);}
+
+  .booking-meta{
+    font-size:.82rem;
+    color:var(--forest-70);
+    line-height:1.75;
+    margin-bottom:14px;
+    padding-top:2px;
+  }
+  .booking-meta b{color:var(--forest); font-weight:700; font-size:.88rem;}
+
+  .booking-actions{display:flex; gap:8px;}
+  .b-btn{
+    flex:1;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px 10px;
+    border-radius:10px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    font-size:.78rem;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--forest);
+    transition:background .2s var(--ease), opacity .2s ease, transform .2s var(--ease), box-shadow .2s var(--ease), color .2s ease;
+  }
+  .b-btn svg{width:13px; height:13px;}
+  .b-btn:hover:not(:disabled){transform:translateY(-1px); box-shadow:var(--shadow-sm);}
+  .b-btn:active:not(:disabled){transform:translateY(0);}
+  .b-btn.confirm{border-color:var(--deep-sage); color:var(--deep-sage);}
+  .b-btn.confirm:hover:not(:disabled){background:var(--deep-sage); color:var(--cream-soft);}
+  .b-btn.cancel{border-color:var(--clay-red); color:var(--clay-red);}
+  .b-btn.cancel:hover:not(:disabled){background:var(--clay-red); color:var(--cream-soft);}
+  .b-btn:disabled{opacity:.4; cursor:default;}
+
+  /* -------------------- blocked days -------------------- */
+  .cal-cell.blocked{
+    background:repeating-linear-gradient(135deg, rgba(166,84,63,.05), rgba(166,84,63,.05) 6px, rgba(166,84,63,.1) 6px, rgba(166,84,63,.1) 12px);
+  }
+  .cal-cell.blocked .cal-daynum{color:var(--clay-red);}
+  .cal-blocked-tag{
+    font-size:.63rem;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    color:var(--clay-red);
+    display:flex; align-items:center; gap:3px;
+  }
+  .cal-blocked-tag svg{width:10px; height:10px;}
+
+  .day-block-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    margin-bottom:18px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--line-brass);
+    background:var(--cream);
+  }
+  .day-block-row.is-blocked{border-color:var(--clay-red); background:var(--clay-red-soft);}
+  .day-block-label{font-size:.78rem; color:var(--forest-70); display:flex; align-items:center; gap:7px;}
+  .day-block-label svg{width:14px; height:14px; flex-shrink:0;}
+  .day-block-row.is-blocked .day-block-label{color:var(--clay-red);}
+  .day-block-btn{
+    padding:7px 14px;
+    border-radius:100px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    font-size:.74rem;
+    font-weight:700;
+    color:var(--forest);
+    white-space:nowrap;
+    transition:background .2s ease;
+  }
+  .day-block-btn:hover{background:var(--cream);}
+  .day-block-row.is-blocked .day-block-btn{border-color:var(--clay-red); color:var(--clay-red);}
+
+  /* -------------------- agenda view -------------------- */
+  .agenda-day{margin-bottom:22px;}
+  .agenda-day-head{
+    display:flex; align-items:baseline; gap:10px;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line-brass);
+  }
+  .agenda-day-date{font-family:'Bodoni Moda', serif; font-size:1.05rem;}
+  .agenda-day-count{font-size:.76rem; color:var(--forest-70);}
+  .agenda-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    padding:11px 14px;
+    border-radius:12px;
+    border:1px solid var(--line-brass);
+    background:var(--cream-soft);
+    margin-bottom:8px;
+    cursor:pointer;
+    transition:transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .agenda-row:hover{transform:translateX(3px); box-shadow:var(--shadow-sm);}
+  .agenda-row-left{display:flex; align-items:center; gap:12px; min-width:0;}
+  .agenda-time{font-size:.78rem; font-weight:700; color:var(--forest-70); width:64px; flex-shrink:0;}
+  .agenda-name{font-size:.86rem; font-weight:700; color:var(--forest); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .agenda-service{font-size:.76rem; color:var(--forest-70);}
+  .agenda-empty-day{font-size:.78rem; color:var(--forest-45); padding:4px 2px 0;}
+  .agenda-status-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .agenda-status-dot.pending{background:var(--brass);}
+  .agenda-status-dot.confirmed{background:var(--deep-sage);}
+  .agenda-status-dot.cancelled{background:var(--clay-red);}
+
+  /* -------------------- booking detail modal -------------------- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(27,36,25,.45);
+    -webkit-backdrop-filter:blur(3px);
+    backdrop-filter:blur(3px);
+    z-index:100;
+    align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    width:100%; max-width:460px;
+    max-height:88vh;
+    overflow-y:auto;
+    background:var(--cream-soft);
+    border:1px solid var(--line-brass);
+    border-radius:22px;
+    padding:32px 28px 28px;
+    position:relative;
+    box-shadow:var(--shadow-lg);
+    animation:popIn .3s var(--ease) both;
+  }
+  .modal-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, transparent, var(--brass-light) 22%, var(--brass) 50%, var(--brass-light) 78%, transparent);
+  }
+  .modal-close{
+    position:absolute; top:16px; right:16px;
+    width:32px; height:32px;
+    border-radius:50%;
+    border:1px solid var(--line-brass);
+    background:var(--cream);
+    color:var(--forest-70);
+    font-size:1.2rem;
+    line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s ease;
+  }
+  .modal-close:hover{background:var(--cream)}
+  .modal-title{font-size:1.3rem; margin-bottom:2px; padding-right:30px;}
+  .modal-sub{font-size:.82rem; color:var(--forest-70); margin-bottom:18px;}
+  .modal-section{margin-bottom:18px;}
+  .modal-section-label{
+    font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--forest-70); font-weight:700; margin-bottom:8px;
+  }
+  .modal-detail-grid{
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:10px 16px;
+    font-size:.84rem;
+  }
+  .modal-detail-grid div span{display:block; font-size:.7rem; color:var(--forest-70); margin-bottom:2px;}
+  .modal-notes-textarea{
+    width:100%;
+    min-height:80px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--line-brass);
+    background:var(--cream);
+    color:var(--forest);
+    font-family:inherit;
+    font-size:.84rem;
+    line-height:1.5;
+    resize:vertical;
+    outline:none;
+    transition:border-color .2s ease;
+  }
+  .modal-notes-textarea:focus{border-color:var(--brass);}
+  .modal-save-btn{
+    margin-top:10px;
+    padding:9px 18px;
+    border-radius:100px;
+    border:none;
+    background:var(--forest);
+    color:var(--cream-soft);
+    font-size:.78rem;
+    font-weight:700;
+    transition:background .2s ease, opacity .2s ease;
+  }
+  .modal-save-btn:hover{background:var(--forest-deep);}
+  .modal-save-btn:disabled{opacity:.5;}
+  .modal-save-status{font-size:.76rem; color:var(--deep-sage); margin-left:10px;}
+  .modal-actions{display:flex; gap:8px; margin-top:4px;}
+  .history-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    font-size:.8rem;
+  }
+  .history-row:last-child{border-bottom:none;}
+  .history-row-date{color:var(--forest-70);}
+  .modal-empty{font-size:.8rem; color:var(--forest-70); padding:6px 0;}
+
+  /* -------------------- upcoming rail (below calendar on mobile / summary) -------------------- */
+  .summary-strip{
+    display:flex; gap:12px; flex-wrap:wrap;
+    margin-bottom:26px;
+  }
+  .summary-chip{
+    padding:14px 20px;
+    border-radius:16px;
+    border:1px solid var(--line-brass);
+    background:linear-gradient(160deg, var(--cream-soft), var(--cream) 130%);
+    font-size:.78rem;
+    color:var(--forest-70);
+    display:flex; align-items:center; gap:12px;
+    box-shadow:var(--shadow-sm);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+    animation:fadeUp .4s var(--ease) both;
+  }
+  .summary-chip:hover{transform:translateY(-2px); box-shadow:var(--shadow-md);}
+  .summary-chip-icon{
+    width:34px; height:34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    background:rgba(255,255,255,.55);
+    border:1px solid var(--line-brass);
+  }
+  .summary-chip-icon svg{width:16px; height:16px;}
+  .summary-chip.pending .summary-chip-icon{color:var(--brass);}
+  .summary-chip.today .summary-chip-icon{color:var(--deep-sage);}
+  .summary-chip.upcoming .summary-chip-icon{color:var(--sage);}
+  .summary-chip.revenue .summary-chip-icon{color:var(--brass);}
+  .summary-chip b{
+    font-family:'Bodoni Moda', serif;
+    font-size:1.3rem;
+    color:var(--forest);
+    display:block;
+    line-height:1;
+    margin-bottom:2px;
+  }
+  .summary-chip-label{display:block; letter-spacing:.01em;}
+
+  .loading-line{
+    text-align:center;
+    padding:70px 20px;
+    color:var(--forest-70);
+    font-size:.88rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .loading-spinner{
+    width:30px; height:30px;
+    border-radius:50%;
+    border:2.5px solid var(--line-brass);
+    border-top-color:var(--brass);
+    animation:spin .8s linear infinite;
+  }
+
+  /* -------------------- responsive -------------------- */
+  @media (max-width: 980px){
+    .main{grid-template-columns:1fr;}
+    .day-panel{
+      position:static;
+      height:auto;
+      border-left:none;
+      border-top:1px solid var(--line);
+    }
+    .topbar{flex-wrap:wrap; row-gap:10px;}
+  }
+  @media (max-width: 560px){
+    .cal-panel{padding:20px 14px 40px;}
+    .cal-cell{min-height:64px; padding:6px 4px 8px;}
+    .cal-daynum{width:20px; height:20px; font-size:.72rem;}
+    .topbar{padding:14px 16px;}
+    .topbar-brand span{display:none;}
+    .topbar-clock-tag{display:none;}
+    .topbar-clock{padding:7px 11px;}
+    .search-bar{padding:12px 16px;}
+    .search-results{left:16px; right:16px;}
+    .icon-btn span, .icon-btn{font-size:.74rem; padding:8px 12px;}
+    .exportBtn-label{display:none;}
+    .view-toggle-btn{padding:6px 10px; font-size:.72rem;}
+    .modal-detail-grid{grid-template-columns:1fr;}
+  }
+
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card" id="gateCard">
+    <div class="gate-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <div class="gate-mark">The Quiet <em>Mind</em></div>
+    <div class="gate-sub">Practice bookings — enter your passcode to continue.</div>
+    <div class="gate-input-wrap">
+      <input type="password" class="gate-input" id="gateInput" placeholder="Passcode" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="gateError" autofocus>
+      <button type="button" class="gate-toggle" id="gateToggle" aria-label="Show passcode" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="gate-btn" id="gateBtn">
+      <span class="gate-btn-spinner"></span>
+      <span class="gate-btn-label">Unlock</span>
+    </button>
+    <div class="gate-error" id="gateError" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>Incorrect passcode — try again.</span>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      <h1>The Quiet <em>Mind</em></h1>
+      <span>Bookings</span>
+    </div>
+    <div class="topbar-clock" id="topbarClock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span id="clockTime">—</span>
+      <span class="topbar-clock-tag">Uganda time</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn subtle" id="exportBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Export
+      </button>
+      <button class="icon-btn subtle" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Refresh
+      </button>
+      <button class="icon-btn" id="lockBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Lock
+      </button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Search name, reference, phone, or email…" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div class="main">
+
+    <div class="cal-panel">
+
+      <div class="summary-strip" id="summaryStrip"></div>
+
+      <div class="cal-head">
+        <h2 class="cal-title" id="calTitle">—</h2>
+        <div class="cal-nav">
+          <div class="view-toggle">
+            <button class="view-toggle-btn active" id="viewMonthBtn">Month</button>
+            <button class="view-toggle-btn" id="viewAgendaBtn">Agenda</button>
+          </div>
+          <button class="cal-nav-btn" id="prevMonth" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="cal-nav-btn" id="nextMonth" aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="cal-today-btn" id="todayBtn">Today</button>
+        </div>
+      </div>
+
+      <div class="cal-legend">
+        <span><i class="dot pending"></i> Pending</span>
+        <span><i class="dot confirmed"></i> Confirmed</span>
+        <span><i class="dot cancelled"></i> Cancelled</span>
+      </div>
+
+      <div id="calWrap">
+        <div class="loading-line"><span class="loading-spinner"></span>Loading bookings…</div>
+      </div>
+
+    </div>
+
+    <div class="day-panel" id="dayPanel">
+      <div class="day-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+        Select a day on the calendar to see its bookings.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card" id="modalCard">
+    <button type="button" class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — keep these two values identical to the CONFIG object
+   in index.html. If you change the passcode or the Sheet URL
+   there, update it here too.
+   ============================================================ */
+// The practice runs on East Africa Time (UTC+3, no daylight saving).
+// Every "today"/"now" calculation in this dashboard is anchored to this
+// timezone instead of the viewer's browser timezone — see ugandaNow().
+const UGANDA_TZ = 'Africa/Kampala';
+
+const CONFIG = {
+  // SHA-256 hash of the passcode, not the passcode itself — so it isn't sitting
+  // in plain text in view-source. To set a new passcode: hash it (e.g. run
+  // `echo -n "yourNewPasscode" | shasum -a 256` in a terminal, or use any
+  // SHA-256 tool) and paste the resulting hex string below.
+  adminPasscodeHash: "45807f49296424b58f07ebc50033519ee1deecd654235eaed279792c961e1c33",
+  googleSheetUrl: "https://script.google.com/macros/s/AKfycbwcx8TihCihofvOPtedCsyHfcuDt0by4eb7itp9xvYlFOEuPv_xyO894sW-PWh8dOmOkA/exec",
+  // Mirrors the prices in index.html's CONFIG.services — update both places if prices change.
+  servicePrices: {
+    "Child Therapy": 60,
+    "Work & Career": 70,
+    "Personal Therapy": 70,
+    "Group Session": 100,
+    "Family Therapy": 80,
+    "Couples Therapy": 80
+  }
+};
+
+/* ------------------------------------------------------------
+   Rate limiting — after too many wrong attempts, lock the gate
+   out for a while. Backed by localStorage so refreshing the page
+   (or closing/reopening the tab) doesn't reset it. This still
+   isn't real server-side protection — someone could clear their
+   browser storage to reset it — but it stops casual repeated
+   guessing, which a client-only check otherwise can't do at all.
+   ------------------------------------------------------------ */
+const RATE_LIMIT_KEY = 'tqm_admin_rate_limit';
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_STEPS_SECONDS = [30, 60, 120, 300, 600]; // escalates, caps at 10 min
+
+function getRateState(){
+  try {
+    const raw = localStorage.getItem(RATE_LIMIT_KEY);
+    if (!raw) return { attempts: 0, lockoutUntil: 0, level: 0 };
+    const parsed = JSON.parse(raw);
+    return {
+      attempts: parsed.attempts || 0,
+      lockoutUntil: parsed.lockoutUntil || 0,
+      level: parsed.level || 0
+    };
+  } catch (e) {
+    return { attempts: 0, lockoutUntil: 0, level: 0 };
+  }
+}
+
+function setRateState(state){
+  try { localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable — fail open on this layer only */ }
+}
+
+let lockoutTimer = null;
+
+function msRemaining(){
+  return Math.max(0, getRateState().lockoutUntil - Date.now());
+}
+
+function applyLockoutUI(){
+  const remaining = msRemaining();
+  clearTimeout(lockoutTimer);
+
+  if (remaining <= 0){
+    gateInput.disabled = false;
+    gateBtn.disabled = false;
+    gateToggle.disabled = false;
+    return;
+  }
+
+  gateInput.disabled = true;
+  gateBtn.disabled = true;
+  gateToggle.disabled = true;
+
+  const seconds = Math.ceil(remaining / 1000);
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const timeLabel = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  showGateError(`Too many attempts. Try again in ${timeLabel}.`);
+
+  lockoutTimer = setTimeout(applyLockoutUI, 1000);
+}
+
+function registerFailedAttempt(){
+  const state = getRateState();
+  state.attempts += 1;
+
+  if (state.attempts >= MAX_ATTEMPTS){
+    const duration = LOCKOUT_STEPS_SECONDS[Math.min(state.level, LOCKOUT_STEPS_SECONDS.length - 1)];
+    state.lockoutUntil = Date.now() + duration * 1000;
+    state.level = Math.min(state.level + 1, LOCKOUT_STEPS_SECONDS.length - 1);
+    state.attempts = 0;
+    setRateState(state);
+    applyLockoutUI();
+  } else {
+    setRateState(state);
+  }
+}
+
+function registerSuccess(){
+  setRateState({ attempts: 0, lockoutUntil: 0, level: 0 });
+  clearTimeout(lockoutTimer);
+}
+
+/* ------------------------------------------------------------
+   Passcode gate
+   ------------------------------------------------------------ */
+const gate = document.getElementById('gate');
+const gateCard = document.getElementById('gateCard');
+const app = document.getElementById('app');
+const gateInput = document.getElementById('gateInput');
+const gateError = document.getElementById('gateError');
+const gateBtn = document.getElementById('gateBtn');
+const gateToggle = document.getElementById('gateToggle');
+
+const EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_CLOSED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.3 21.3 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 5c7 0 11 7 11 7a21.4 21.4 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
+
+gateToggle.addEventListener('click', () => {
+  const showing = gateInput.type === 'text';
+  gateInput.type = showing ? 'password' : 'text';
+  gateToggle.innerHTML = showing ? EYE_OPEN : EYE_CLOSED;
+  gateToggle.setAttribute('aria-label', showing ? 'Show passcode' : 'Hide passcode');
+  gateToggle.setAttribute('aria-pressed', String(!showing));
+  gateInput.focus();
+});
+
+function clearGateError(){
+  gateError.classList.remove('show');
+  gateInput.classList.remove('invalid');
+  gateInput.setAttribute('aria-invalid', 'false');
+}
+
+function showGateError(message){
+  gateError.querySelector('span').textContent = message || 'Incorrect passcode — try again.';
+  gateError.classList.add('show');
+  gateInput.classList.add('invalid');
+  gateInput.setAttribute('aria-invalid', 'true');
+  gateCard.classList.remove('shake');
+  // restart the animation even if it's already mid-shake
+  void gateCard.offsetWidth;
+  gateCard.classList.add('shake');
+  gateCard.addEventListener('animationend', () => gateCard.classList.remove('shake'), { once:true });
+}
+
+gateInput.addEventListener('input', clearGateError);
+
+function focusGate(){
+  // slight delay so it fires after any display/animation change
+  setTimeout(() => gateInput.focus(), 50);
+}
+
+function unlock(){
+  gate.style.display = 'none';
+  app.classList.add('show');
+  init();
+}
+
+document.getElementById('gateBtn').addEventListener('click', tryUnlock);
+gateInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+async function sha256Hex(text){
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function tryUnlock(){
+  const value = gateInput.value.trim();
+  if (!value || gateBtn.classList.contains('checking')) return;
+
+  if (msRemaining() > 0){
+    applyLockoutUI();
+    return;
+  }
+
+  if (!window.crypto || !window.crypto.subtle){
+    showGateError('This page needs to be opened over https:// for the passcode check to work.');
+    return;
+  }
+
+  gateBtn.classList.add('checking');
+  gateBtn.disabled = true;
+
+  // sha256Hex is itself async, and the setTimeout below just keeps the
+  // brief "verifying" pause feeling deliberate rather than instant.
+  Promise.all([
+    sha256Hex(value),
+    new Promise(resolve => setTimeout(resolve, 260))
+  ]).then(([hash]) => {
+    gateBtn.classList.remove('checking');
+    gateBtn.disabled = false;
+
+    if (hash === CONFIG.adminPasscodeHash){
+      clearGateError();
+      registerSuccess();
+      unlock();
+    } else {
+      registerFailedAttempt();
+      if (msRemaining() <= 0) showGateError();
+      gateInput.value = '';
+      if (!gateInput.disabled) gateInput.focus();
+    }
+  });
+}
+
+document.getElementById('lockBtn').addEventListener('click', () => {
+  app.classList.remove('show');
+  gate.style.display = 'flex';
+  gateInput.value = '';
+  gateInput.type = 'password';
+  gateToggle.innerHTML = EYE_OPEN;
+  gateToggle.setAttribute('aria-label', 'Show passcode');
+  gateToggle.setAttribute('aria-pressed', 'false');
+  clearGateError();
+  focusGate();
+  applyLockoutUI();
+});
+
+focusGate();
+applyLockoutUI();
+
+/* ------------------------------------------------------------
+   Data layer — same contract as index.html's admin panel:
+   GET the sheet for the full list, POST { action: 'updateStatus' }
+   to change a booking's status.
+   ------------------------------------------------------------ */
+let bookings = [];               // flat list from the sheet
+let blockedDates = [];           // dates (yyyy-MM-dd) the practice is unavailable
+let byDate = {};                 // date (yyyy-MM-dd) -> [bookings]
+let viewYear, viewMonth;         // 0-indexed month, calendar currently showing
+let selectedDate = null;         // yyyy-MM-dd currently open in the day panel
+let calendarView = 'month';      // 'month' | 'agenda'
+
+async function loadBookings(){
+  if (!CONFIG.googleSheetUrl) return { bookings: [], blockedDates: [] };
+  try {
+    const res = await fetch(CONFIG.googleSheetUrl, { method: 'GET' });
+    if (!res.ok) return { bookings: [], blockedDates: [] };
+    const data = await res.json();
+    if (Array.isArray(data)) return { bookings: data, blockedDates: [] }; // backward-compatible
+    return { bookings: data.bookings || [], blockedDates: data.blockedDates || [] };
+  } catch (e) {
+    return { bookings: [], blockedDates: [] };
+  }
+}
+
+async function postAction(payload){
+  if (!CONFIG.googleSheetUrl) return null;
+  try {
+    const res = await fetch(CONFIG.googleSheetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoids a CORS preflight Apps Script can't handle
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function setBookingStatus(ref, status){ return postAction({ action: 'updateStatus', ref, status }); }
+function setBookingNotes(ref, notes){ return postAction({ action: 'updateNotes', ref, notes }); }
+function blockDay(date, reason){ return postAction({ action: 'blockDay', date, reason }); }
+function unblockDay(date){ return postAction({ action: 'unblockDay', date }); }
+
+// Returns a Date object whose getFullYear/getMonth/getDate/getDay/getHours
+// etc. all reflect the current moment IN UGANDA — regardless of what
+// timezone the browser viewing this page is actually in. This is what makes
+// "today", the calendar's default month, and the summary stats line up with
+// Uganda time even when someone opens the dashboard from somewhere else.
+function ugandaNow(){
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: UGANDA_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }).formatToParts(new Date());
+  const get = (type) => parts.find(p => p.type === type).value;
+  let hour = parseInt(get('hour'), 10);
+  if (hour === 24) hour = 0; // some locales format midnight as "24"
+  return new Date(
+    parseInt(get('year'), 10),
+    parseInt(get('month'), 10) - 1,
+    parseInt(get('day'), 10),
+    hour,
+    parseInt(get('minute'), 10),
+    parseInt(get('second'), 10)
+  );
+}
+
+function todayISO(){
+  const d = ugandaNow();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function niceDate(iso){
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+
+/* ------------------------------------------------------------
+   Live Uganda time clock — the practice runs on East Africa Time
+   (UTC+3, no daylight saving), so this gives anyone viewing the
+   dashboard from another timezone a constant, correct reference
+   point for what "now" means for a booking.
+   ------------------------------------------------------------ */
+const clockTimeEl = document.getElementById('clockTime');
+const clockFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: UGANDA_TZ,
+  weekday: 'short',
+  hour: '2-digit',
+  minute: '2-digit'
+});
+
+function tickClock(){
+  if (clockTimeEl) clockTimeEl.textContent = clockFormatter.format(new Date());
+}
+tickClock();
+setInterval(tickClock, 1000 * 15); // minute-resolution display, no need to tick every second
+
+/* ------------------------------------------------------------
+   Init / refresh
+   ------------------------------------------------------------ */
+async function init(){
+  const now = ugandaNow();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  await refreshData();
+  selectDate(todayISO());
+}
+
+async function refreshData(){
+  const refreshBtn = document.getElementById('refreshBtn');
+  refreshBtn.classList.add('spinning');
+  refreshBtn.disabled = true;
+  document.getElementById('calWrap').innerHTML = '<div class="loading-line"><span class="loading-spinner"></span>Loading bookings…</div>';
+  const data = await loadBookings();
+  bookings = data.bookings;
+  blockedDates = data.blockedDates;
+  byDate = {};
+  bookings.forEach(b => {
+    if (!b.date) return;
+    (byDate[b.date] = byDate[b.date] || []).push(b);
+  });
+  renderSummary();
+  renderCalendarView();
+  if (selectedDate) renderDayPanel(selectedDate);
+  refreshBtn.classList.remove('spinning');
+  refreshBtn.disabled = false;
+}
+
+document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
+/* ------------------------------------------------------------
+   Summary strip
+   ------------------------------------------------------------ */
+function renderSummary(){
+  const today = todayISO();
+  const pending = bookings.filter(b => b.status === 'pending').length;
+  const confirmedToday = (byDate[today] || []).filter(b => b.status !== 'cancelled').length;
+
+  // Count bookings in the next 7 days (excluding cancelled).
+  const now = ugandaNow();
+  let upcoming7 = 0;
+  for (let i = 0; i < 7; i++){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    upcoming7 += (byDate[key] || []).filter(b => b.status !== 'cancelled').length;
+  }
+
+  // Revenue for the current calendar month, confirmed bookings only.
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const revenue = bookings
+    .filter(b => b.status === 'confirmed' && (b.date || '').startsWith(monthPrefix))
+    .reduce((sum, b) => sum + (CONFIG.servicePrices[b.service] || 0), 0);
+
+  const strip = document.getElementById('summaryStrip');
+  strip.innerHTML = `
+    <div class="summary-chip pending">
+      <span class="summary-chip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+      <span><b>${pending}</b><span class="summary-chip-label">awaiting confirmation</span></span>
+    </div>
+    <div class="summary-chip today">
+      <span class="summary-chip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>
+      <span><b>${confirmedToday}</b><span class="summary-chip-label">today</span></span>
+    </div>
+    <div class="summary-chip upcoming">
+      <span class="summary-chip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2-8 4 16 2-8h5"/></svg></span>
+      <span><b>${upcoming7}</b><span class="summary-chip-label">in the next 7 days</span></span>
+    </div>
+    <div class="summary-chip revenue">
+      <span class="summary-chip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+      <span><b>$${revenue}</b><span class="summary-chip-label">confirmed this month</span></span>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------
+   Calendar rendering
+   ------------------------------------------------------------ */
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function renderCalendar(){
+  document.getElementById('calTitle').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const startWeekday = firstOfMonth.getDay(); // 0 = Sun
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+
+  // Build a flat list of 42 cells (6 weeks) so the grid height stays stable.
+  const cells = [];
+  for (let i = 0; i < startWeekday; i++){
+    cells.push({ day: daysInPrevMonth - startWeekday + 1 + i, outside: true, monthOffset: -1 });
+  }
+  for (let d = 1; d <= daysInMonth; d++){
+    cells.push({ day: d, outside: false, monthOffset: 0 });
+  }
+  while (cells.length % 7 !== 0 || cells.length < 42){
+    const nextDay = cells.length - (startWeekday + daysInMonth) + 1;
+    cells.push({ day: nextDay, outside: true, monthOffset: 1 });
+    if (cells.length >= 42) break;
+  }
+
+  const today = todayISO();
+  let html = '<div class="cal-grid"><div class="cal-dow-row">';
+  DOW.forEach(d => html += `<div class="cal-dow">${d}</div>`);
+  html += '</div><div class="cal-weeks">';
+
+  for (let w = 0; w < cells.length / 7; w++){
+    html += '<div class="cal-week-row">';
+    for (let c = 0; c < 7; c++){
+      const cell = cells[w*7 + c];
+      let y = viewYear, m = viewMonth;
+      if (cell.monthOffset === -1){ m -= 1; if (m < 0){ m = 11; y -= 1; } }
+      if (cell.monthOffset === 1){ m += 1; if (m > 11){ m = 0; y += 1; } }
+      const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(cell.day).padStart(2,'0')}`;
+      const dayBookings = byDate[iso] || [];
+      const isToday = iso === today;
+      const isSelected = iso === selectedDate;
+      const isBlocked = blockedDates.includes(iso);
+
+      const statuses = new Set(dayBookings.map(b => b.status));
+      let dots = '';
+      ['pending','confirmed','cancelled'].forEach(s => {
+        if (statuses.has(s)) dots += `<span class="dot ${s}"></span>`;
+      });
+
+      html += `
+        <div class="cal-cell${cell.outside ? ' outside' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}${isBlocked ? ' blocked' : ''}" data-date="${iso}">
+          <span class="cal-daynum">${cell.day}</span>
+          <div class="cal-dots">${dots}</div>
+          ${isBlocked ? `<span class="cal-blocked-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m4.9 4.9 14.2 14.2"/></svg>Blocked</span>` : ''}
+          ${dayBookings.length ? `<div class="cal-count">${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}</div>` : ''}
+        </div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('calWrap').innerHTML = html;
+
+  document.querySelectorAll('.cal-cell').forEach(cell => {
+    cell.addEventListener('click', () => selectDate(cell.dataset.date));
+  });
+}
+
+/* ------------------------------------------------------------
+   View router — Month grid vs Agenda list
+   ------------------------------------------------------------ */
+function renderCalendarView(){
+  document.getElementById('viewMonthBtn').classList.toggle('active', calendarView === 'month');
+  document.getElementById('viewAgendaBtn').classList.toggle('active', calendarView === 'agenda');
+  document.querySelector('.cal-legend').style.display = calendarView === 'month' ? 'flex' : 'none';
+  document.getElementById('prevMonth').style.display = calendarView === 'month' ? '' : 'none';
+  document.getElementById('nextMonth').style.display = calendarView === 'month' ? '' : 'none';
+  if (calendarView === 'month'){
+    document.getElementById('calTitle').style.display = '';
+    renderCalendar();
+  } else {
+    document.getElementById('calTitle').textContent = 'Next 14 days';
+    renderAgenda();
+  }
+}
+
+function renderAgenda(){
+  const now = ugandaNow();
+  now.setHours(0,0,0,0);
+  let html = '';
+
+  for (let i = 0; i < 14; i++){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dayBookings = (byDate[iso] || []).slice().sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+    const isBlocked = blockedDates.includes(iso);
+    const label = d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+
+    html += `
+      <div class="agenda-day">
+        <div class="agenda-day-head">
+          <span class="agenda-day-date">${label}</span>
+          <span class="agenda-day-count">${isBlocked ? 'Blocked' : dayBookings.length ? `${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}` : 'Nothing booked'}</span>
+        </div>
+        ${dayBookings.length === 0 ? '' : dayBookings.map(b => `
+          <div class="agenda-row" data-ref="${b.ref}" data-date="${iso}">
+            <div class="agenda-row-left">
+              <span class="agenda-status-dot ${b.status}"></span>
+              <span class="agenda-time">${escapeHtml(b.time || '')}</span>
+              <span class="agenda-name">${escapeHtml(b.name || 'Unnamed')}</span>
+            </div>
+            <span class="agenda-service">${escapeHtml(b.service || '')}</span>
+          </div>
+        `).join('')}
+      </div>`;
+  }
+
+  document.getElementById('calWrap').innerHTML = html;
+
+  document.querySelectorAll('.agenda-row').forEach(row => {
+    row.addEventListener('click', () => {
+      selectedDate = row.dataset.date;
+      openBookingModal(row.dataset.ref);
+    });
+  });
+}
+
+document.getElementById('viewMonthBtn').addEventListener('click', () => {
+  calendarView = 'month';
+  renderCalendarView();
+});
+document.getElementById('viewAgendaBtn').addEventListener('click', () => {
+  calendarView = 'agenda';
+  renderCalendarView();
+});
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  viewMonth -= 1;
+  if (viewMonth < 0){ viewMonth = 11; viewYear -= 1; }
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  viewMonth += 1;
+  if (viewMonth > 11){ viewMonth = 0; viewYear += 1; }
+  renderCalendar();
+});
+document.getElementById('todayBtn').addEventListener('click', () => {
+  const now = ugandaNow();
+  viewYear = now.getFullYear();
+  viewMonth = now.getMonth();
+  calendarView = 'month';
+  renderCalendarView();
+  selectDate(todayISO());
+});
+
+/* ------------------------------------------------------------
+   Day panel — list + confirm/cancel actions for the selected day
+   ------------------------------------------------------------ */
+function selectDate(iso){
+  selectedDate = iso;
+  calendarView = 'month';
+  // Jump the visible month if the selected date lives outside it.
+  const [y, m] = iso.split('-').map(Number);
+  if (y !== viewYear || (m - 1) !== viewMonth){
+    viewYear = y; viewMonth = m - 1;
+  }
+  renderCalendarView();
+  renderDayPanel(iso);
+}
+
+function renderDayPanel(iso){
+  const panel = document.getElementById('dayPanel');
+  const dayBookings = (byDate[iso] || []).slice().sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+  const isBlocked = blockedDates.includes(iso);
+
+  let html = `
+    <div class="day-panel-head">
+      <h3 class="day-panel-date">${niceDate(iso)}</h3>
+    </div>
+    <div class="day-panel-sub">${dayBookings.length ? `${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}` : 'No bookings'}</div>
+    <div class="day-block-row${isBlocked ? ' is-blocked' : ''}" id="dayBlockRow">
+      <span class="day-block-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+        ${isBlocked ? 'This day is blocked' : 'Mark this day unavailable'}
+      </span>
+      <button class="day-block-btn" id="dayBlockBtn">${isBlocked ? 'Unblock' : 'Block day'}</button>
+    </div>
+  `;
+
+  if (dayBookings.length === 0){
+    html += `
+      <div class="day-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+        Nothing booked on this day yet.
+      </div>`;
+  } else {
+    dayBookings.forEach((b, i) => {
+      html += `
+        <div class="booking-card" data-ref="${b.ref}" style="animation-delay:${Math.min(i,6) * 45}ms">
+          <div class="booking-top">
+            <div>
+              <div class="booking-name">${escapeHtml(b.name || 'Unnamed')}</div>
+              <div class="booking-service">${escapeHtml(b.service || '')}</div>
+            </div>
+            <span class="status-pill ${b.status}">${b.status}</span>
+          </div>
+          <div class="booking-meta">
+            <b>${escapeHtml(b.time || '')}</b><br>
+            ${b.phone ? escapeHtml(b.phone) + '<br>' : ''}
+            ${b.email ? escapeHtml(b.email) + '<br>' : ''}
+            Ref ${escapeHtml(b.ref || '—')}
+          </div>
+          <div class="booking-actions">
+            <button class="b-btn confirm" data-action="confirmed" ${b.status === 'confirmed' ? 'disabled' : ''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Confirm
+            </button>
+            <button class="b-btn cancel" data-action="cancelled" ${b.status === 'cancelled' ? 'disabled' : ''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              Cancel
+            </button>
+          </div>
+        </div>`;
+    });
+  }
+
+  panel.innerHTML = html;
+
+  document.getElementById('dayBlockBtn').addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    if (isBlocked) await unblockDay(iso); else await blockDay(iso, '');
+    await refreshData();
+  });
+
+  panel.querySelectorAll('.booking-card').forEach(card => {
+    const ref = card.dataset.ref;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.b-btn')) return; // let action buttons handle their own click
+      openBookingModal(ref);
+    });
+    card.querySelectorAll('.b-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const status = btn.dataset.action;
+        card.querySelectorAll('.b-btn').forEach(b => b.disabled = true);
+        const result = await setBookingStatus(ref, status);
+        if (!result || result.success === false){
+          alert('Could not update that booking — check your connection and try again.');
+          card.querySelectorAll('.b-btn').forEach(b => b.disabled = false);
+          return;
+        }
+        await refreshData();
+      });
+    });
+  });
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ------------------------------------------------------------
+   Booking detail modal — full info, notes, client history
+   ------------------------------------------------------------ */
+const modalOverlay = document.getElementById('modalOverlay');
+const modalBody = document.getElementById('modalBody');
+
+function closeModal(){ modalOverlay.classList.remove('open'); }
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+function openBookingModal(ref){
+  const b = bookings.find(x => x.ref === ref);
+  if (!b) return;
+
+  // Other bookings from the same client, most recent first.
+  const history = bookings
+    .filter(x => x.ref !== ref && ((b.phone && x.phone === b.phone) || (b.email && x.email === b.email)))
+    .sort((a,c) => (c.date || '').localeCompare(a.date || ''));
+
+  modalBody.innerHTML = `
+    <h3 class="modal-title">${escapeHtml(b.name || 'Unnamed')}</h3>
+    <div class="modal-sub">${escapeHtml(b.service || '')} · <span class="status-pill ${b.status}" style="margin-left:2px;">${b.status}</span></div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">Details</div>
+      <div class="modal-detail-grid">
+        <div><span>Date</span>${niceDate(b.date)}</div>
+        <div><span>Time</span>${escapeHtml(b.time || '—')}</div>
+        <div><span>Phone</span>${b.phone ? escapeHtml(b.phone) : '—'}</div>
+        <div><span>Email</span>${b.email ? escapeHtml(b.email) : '—'}</div>
+        <div><span>Reference</span>${escapeHtml(b.ref || '—')}</div>
+        <div><span>Price</span>${CONFIG.servicePrices[b.service] ? '$' + CONFIG.servicePrices[b.service] : '—'}</div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">Actions</div>
+      <div class="modal-actions">
+        <button class="b-btn confirm" id="modalConfirmBtn" ${b.status === 'confirmed' ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          Confirm
+        </button>
+        <button class="b-btn cancel" id="modalCancelBtn" ${b.status === 'cancelled' ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">Private notes</div>
+      <textarea class="modal-notes-textarea" id="modalNotes" placeholder="e.g. prefers evening sessions, follow up about referral…">${escapeHtml(b.notes || '')}</textarea><br>
+      <button class="modal-save-btn" id="modalSaveNotes">Save note</button>
+      <span class="modal-save-status" id="modalSaveStatus"></span>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-label">Client history</div>
+      ${history.length === 0
+        ? '<div class="modal-empty">No other sessions on record for this client.</div>'
+        : history.map(h => `
+          <div class="history-row">
+            <span>${escapeHtml(h.service || '')}</span>
+            <span class="history-row-date">${h.date} · <span class="status-pill ${h.status}">${h.status}</span></span>
+          </div>`).join('')
+      }
+    </div>
+  `;
+
+  document.getElementById('modalConfirmBtn').addEventListener('click', () => modalUpdateStatus(ref, 'confirmed'));
+  document.getElementById('modalCancelBtn').addEventListener('click', () => modalUpdateStatus(ref, 'cancelled'));
+  document.getElementById('modalSaveNotes').addEventListener('click', async () => {
+    const btn = document.getElementById('modalSaveNotes');
+    const status = document.getElementById('modalSaveStatus');
+    btn.disabled = true;
+    const notesValue = document.getElementById('modalNotes').value;
+    const result = await setBookingNotes(ref, notesValue);
+    btn.disabled = false;
+    if (!result || result.success === false){
+      status.textContent = 'Could not save — try again.';
+      status.style.color = 'var(--clay-red)';
+    } else {
+      b.notes = notesValue; // keep in-memory copy in sync without a full refetch
+      status.textContent = 'Saved';
+      status.style.color = 'var(--deep-sage)';
+      setTimeout(() => { status.textContent = ''; }, 2000);
+    }
+  });
+
+  modalOverlay.classList.add('open');
+}
+
+async function modalUpdateStatus(ref, status){
+  document.getElementById('modalConfirmBtn').disabled = true;
+  document.getElementById('modalCancelBtn').disabled = true;
+  const result = await setBookingStatus(ref, status);
+  if (!result || result.success === false){
+    alert('Could not update that booking — check your connection and try again.');
+    document.getElementById('modalConfirmBtn').disabled = false;
+    document.getElementById('modalCancelBtn').disabled = false;
+    return;
+  }
+  await refreshData();
+  closeModal();
+}
+
+/* ------------------------------------------------------------
+   Search — name, reference, phone, email across all bookings
+   ------------------------------------------------------------ */
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q){ searchResults.classList.remove('open'); return; }
+
+  const matches = bookings.filter(b =>
+    (b.name || '').toLowerCase().includes(q) ||
+    (b.ref || '').toLowerCase().includes(q) ||
+    (b.phone || '').toLowerCase().includes(q) ||
+    (b.email || '').toLowerCase().includes(q)
+  ).slice(0, 20);
+
+  searchResults.innerHTML = matches.length === 0
+    ? '<div class="search-result-empty">No bookings match.</div>'
+    : matches.map(b => `
+        <div class="search-result-item" data-ref="${b.ref}" data-date="${b.date}">
+          <span>
+            <span class="search-result-name">${escapeHtml(b.name || 'Unnamed')}</span><br>
+            <span class="search-result-meta">${escapeHtml(b.service || '')} · ${b.date}</span>
+          </span>
+          <span class="status-pill ${b.status}">${b.status}</span>
+        </div>
+      `).join('');
+
+  searchResults.querySelectorAll('.search-result-item').forEach(item => {
+    item.addEventListener('click', () => {
+      searchInput.value = '';
+      searchResults.classList.remove('open');
+      selectDate(item.dataset.date);
+      openBookingModal(item.dataset.ref);
+    });
+  });
+
+  searchResults.classList.add('open');
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-bar')) searchResults.classList.remove('open');
+});
+
+/* ------------------------------------------------------------
+   CSV export
+   ------------------------------------------------------------ */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const header = ['Name','Service','Date','Time','Phone','Email','Status','Reference','Notes'];
+  const rows = bookings
+    .slice()
+    .sort((a,b) => (a.date || '').localeCompare(b.date || ''))
+    .map(b => [b.name, b.service, b.date, b.time, b.phone, b.email, b.status, b.ref, b.notes || '']);
+
+  const csvEscape = (val) => {
+    const s = String(val ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const csv = [header, ...rows].map(row => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bookings-${todayISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
