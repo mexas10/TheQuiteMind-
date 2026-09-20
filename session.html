@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title id="pageTitle">A Session at The Quiet Mind</title>
+<meta name="description" id="pageDesc" content="Learn about this type of therapy session at The Quiet Mind and reserve your time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:        #E7DFC8;
+  --cream-soft:   #FAF7EF;
+  --forest:       #1B2419;
+  --forest-deep:  #2E4028;
+  --forest-70:    rgba(27,36,25,.68);
+  --sage:         #6B7D57;
+  --sage-light:   #C3CDAE;
+  --brass:        #A6813F;
+  --brass-light:  #D9BD82;
+  --line:         rgba(27,36,25,.13);
+  --line-brass:   rgba(166,129,63,.35);
+  --deep-sage:    #47603D;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--cream-soft);
+  color:var(--forest);
+  font-family:'Manrope', sans-serif;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2{
+  font-family:'Bodoni Moda', serif;
+  font-weight:450;
+  letter-spacing:-0.015em;
+  line-height:1.1;
+}
+a{color:inherit;text-decoration:none;}
+.wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+
+header{
+  background:var(--forest);
+  padding:0 24px;height:76px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:12px;color:var(--cream-soft);
+  font-family:'Bodoni Moda',serif;font-size:19px;font-weight:500;}
+.logo-mark{width:38px;height:38px;border-radius:50%;object-fit:cover;}
+.logo em{font-style:italic;color:var(--brass-light);}
+.back-link{display:flex;align-items:center;gap:6px;color:var(--cream-soft);
+  font-size:13.5px;font-weight:600;padding:9px 16px;border-radius:50px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);}
+
+#loadingState{padding:80px 24px;text-align:center;color:var(--forest-70);}
+#errorState{display:none;padding:80px 24px;text-align:center;}
+#errorState a{color:var(--brass);font-weight:700;text-decoration:underline;}
+
+#content{display:none;}
+
+.hero-photo{
+  width:100%;height:280px;background-size:cover;background-position:center;
+  background-color:var(--sage-light);
+}
+
+.detail-wrap{padding:36px 24px 60px;}
+
+.tag-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--cream);color:var(--forest-deep);
+  font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 15px;border-radius:50px;margin-bottom:18px;
+  border:1px solid var(--line-brass);
+}
+h1.session-title{font-size:clamp(30px,7vw,42px);margin-bottom:16px;color:var(--forest);}
+.session-desc{font-size:17px;line-height:1.65;color:var(--forest-70);margin-bottom:28px;max-width:56ch;}
+
+.meta-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:34px;}
+.meta-chip{
+  flex:1;min-width:130px;background:var(--cream-soft);border:1px solid var(--line);
+  border-radius:16px;padding:16px 18px;
+}
+.meta-chip .label{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--brass);margin-bottom:4px;}
+.meta-chip .value{font-family:'Bodoni Moda',serif;font-size:21px;color:var(--forest);}
+
+.divider{
+  display:flex;align-items:center;gap:14px;margin:34px 0;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line-brass) 50%,transparent);}
+.divider .mark{width:20px;height:8px;border-radius:50px;
+  background:linear-gradient(135deg,var(--brass),var(--brass-light));flex-shrink:0;}
+
+.info-section h2{font-size:19px;margin-bottom:12px;color:var(--forest);}
+.info-section p{font-size:15px;line-height:1.7;color:var(--forest-70);margin-bottom:14px;}
+
+.cta-box{
+  background:var(--forest);border-radius:20px;padding:32px 26px;text-align:center;
+  margin-top:36px;color:var(--cream-soft);
+}
+.cta-box h2{color:var(--cream-soft);font-size:22px;margin-bottom:8px;}
+.cta-box p{color:rgba(250,247,239,.75);font-size:14px;margin-bottom:20px;}
+.btn-book{
+  display:inline-flex;align-items:center;gap:8px;background:var(--brass);color:var(--forest);
+  font-weight:700;font-size:14.5px;padding:15px 30px;border-radius:50px;
+  box-shadow:0 8px 22px rgba(166,129,63,.35);
+}
+
+.back-all{display:inline-block;margin-top:28px;color:var(--brass);font-weight:700;font-size:13.5px;
+  text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <img class="logo-mark" id="headerLogo" alt="The Quiet Mind">
+    The Quiet <em>Mind</em>
+  </a>
+  <a class="back-link" href="index.html#services">← All Sessions</a>
+</header>
+
+<div id="loadingState">Loading…</div>
+
+<div id="errorState">
+  <div class="wrap" style="padding:20px 0;">
+    <p style="font-size:15px;color:var(--forest-70);margin-bottom:10px;" id="errorMsg">Session not found.</p>
+    <a href="index.html#services">← Back to all sessions</a>
+  </div>
+</div>
+
+<div id="content">
+  <div class="hero-photo" id="heroPhoto"></div>
+
+  <div class="wrap">
+    <div class="detail-wrap">
+      <div class="tag-pill" id="tagPill">Session</div>
+      <h1 class="session-title" id="sessionName"></h1>
+      <p class="session-desc" id="sessionDesc"></p>
+
+      <div class="meta-row">
+        <div class="meta-chip">
+          <div class="label">Duration</div>
+          <div class="value" id="metaDuration">—</div>
+        </div>
+        <div class="meta-chip">
+          <div class="label">Price</div>
+          <div class="value" id="metaPrice">—</div>
+        </div>
+        <div class="meta-chip">
+          <div class="label">Format</div>
+          <div class="value">Video Call</div>
+        </div>
+      </div>
+
+      <div class="divider"><span class="mark"></span></div>
+
+      <div class="info-section">
+        <h2>How it works</h2>
+        <p>Sessions take place over a secure video call at a time you choose. After booking, you'll receive a confirmation with everything you need — no waiting room, no paperwork to bring, just a quiet moment set aside for you.</p>
+        <p>If anything about scheduling or format isn't clear, message us on WhatsApp before you book — we're happy to help you find the right fit.</p>
+      </div>
+
+      <div class="cta-box">
+        <h2>Ready to reserve your time?</h2>
+        <p>Pick a slot that works for you — it only takes a minute.</p>
+        <a class="btn-book" id="bookBtn" href="#">Reserve This Session</a>
+      </div>
+
+      <a class="back-all" href="index.html#services">← See all session types</a>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  document.getElementById('headerLogo').src = CONFIG.logoDataUrl || '';
+
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('service');
+
+  const service = (CONFIG.services || []).find(s => slugify(s.name) === slug);
+
+  if (!service) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+  } else {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+    document.title = service.name + ' — The Quiet Mind';
+    document.getElementById('pageTitle').textContent = service.name + ' — The Quiet Mind';
+    document.getElementById('pageDesc').setAttribute('content', service.description);
+
+    document.getElementById('tagPill').textContent = service.tag || 'Session';
+    document.getElementById('sessionName').textContent = service.name;
+    document.getElementById('sessionDesc').textContent = service.description;
+    document.getElementById('metaDuration').textContent = service.duration || '—';
+    document.getElementById('metaPrice').textContent = service.price || '—';
+
+    if (service.photo) {
+      document.getElementById('heroPhoto').style.backgroundImage = `url('${service.photo}')`;
+    }
+
+    document.getElementById('bookBtn').href = 'index.html#book?service=' + encodeURIComponent(service.name);
+  }
+})();
+</script>
+
+</body>
+</html>
